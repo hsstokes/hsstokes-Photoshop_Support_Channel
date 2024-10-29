@@ -83,42 +83,51 @@
             animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .response-form {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
         }
 
-        .teacher-response {
-            background-color: #FFB6C1;
+        .response-textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #20B2AA;
+            border-radius: 5px;
+        }
+
+        .response-text {
+            background-color: #20B2AA;
             color: white;
             padding: 15px;
             margin-top: 10px;
             border-radius: 5px;
         }
 
-        .file-input-container {
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .screenshot-preview, .question-image {
             max-width: 100%;
-    height: auto;
-    max-height: 300px; /* Limits the height of screenshots */
-    object-fit: contain;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    display: none; /* Hidden by default until an image is uploaded */
-}
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
 
-.file-input-container {
-    margin: 10px 0;
-}
-
-.question-card img {
-    max-width: 100%;
-    height: auto;
-    max-height: 300px; /* Limits the height of screenshots in questions */
-    object-fit: contain;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+        .file-input-container {
+            margin: 10px 0;
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px dashed #20B2AA;
         }
 
         .update-item {
@@ -218,7 +227,8 @@
                 tool: tool,
                 description: description,
                 screenshot: screenshot,
-                timestamp: new Date().toLocaleString()
+                timestamp: new Date().toLocaleString(),
+                responses: []
             };
 
             questions.push(question);
@@ -230,19 +240,68 @@
             const qaContainer = document.getElementById('qa-container');
             const questionElement = document.createElement('div');
             questionElement.className = 'question-card';
+            questionElement.setAttribute('data-question-id', question.id);
             
             let screenshotHtml = question.screenshot && question.screenshot !== '' ? 
-                `<img src="${question.screenshot}" class="question-image" alt="Screenshot">` : '';
+                `<img src="${question.screenshot}" class="question-image" style="display: block;" alt="Screenshot">` : '';
 
-            questionElement.innerHTML = `
+            let questionHtml = `
                 <h3>${question.name}</h3>
                 <p><strong>Tool:</strong> ${question.tool}</p>
                 <p><strong>Description:</strong> ${question.description}</p>
                 ${screenshotHtml}
                 <p><small>Posted on: ${question.timestamp}</small></p>
+                <div class="responses-container">
             `;
 
+            if (question.responses) {
+                question.responses.forEach(response => {
+                    questionHtml += `
+                        <div class="response-text">
+                            <p>${response.text}</p>
+                            <small>Responded on: ${response.timestamp}</small>
+                        </div>
+                    `;
+                });
+            }
+
+            questionHtml += `
+                </div>
+                <div class="response-form">
+                    <textarea class="response-textarea" placeholder="Write your response here..." rows="3"></textarea>
+                    <button class="submit-btn" onclick="submitResponse(${question.id})">Submit Response</button>
+                </div>
+            `;
+
+            questionElement.innerHTML = questionHtml;
             qaContainer.insertBefore(questionElement, qaContainer.firstChild);
+        }
+
+        function submitResponse(questionId) {
+            const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+            const responseTextarea = questionElement.querySelector('.response-textarea');
+            const responseText = responseTextarea.value.trim();
+
+            if (responseText) {
+                const responsesContainer = questionElement.querySelector('.responses-container');
+                const responseElement = document.createElement('div');
+                responseElement.className = 'response-text';
+                responseElement.innerHTML = `
+                    <p>${responseText}</p>
+                    <small>Responded on: ${new Date().toLocaleString()}</small>
+                `;
+
+                responsesContainer.appendChild(responseElement);
+                responseTextarea.value = '';
+
+                const question = questions.find(q => q.id === questionId);
+                if (question) {
+                    question.responses.push({
+                        text: responseText,
+                        timestamp: new Date().toLocaleString()
+                    });
+                }
+            }
         }
 
         function addUpdate() {
@@ -266,6 +325,7 @@
             const updatesContainer = document.getElementById('updates-container');
             const updateElement = document.createElement('div');
             updateElement.className = 'update-item';
+            updateElement.setAttribute('data-update-id', update.id);
             updateElement.innerHTML = `
                 <span>${update.text}</span>
                 <small style="margin-left: 10px; color: #666;">${update.timestamp}</small>
