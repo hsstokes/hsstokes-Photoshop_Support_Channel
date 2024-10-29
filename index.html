@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            background-image:
+                linear-gradient(#20B2AA 1px, transparent 1px),
+                linear-gradient(90deg, #20B2AA 1px, transparent 1px),
+                linear-gradient(#FFB6C1 1px, transparent 1px),
+                linear-gradient(90deg, #FFB6C1 1px, transparent 1px);
+            background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
+        }
+
+        .support-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            color: #20B2AA;
+            text-align: center;
+            border-bottom: 2px solid #20B2AA;
+            padding-bottom: 10px;
+        }
+
+        .contact-form {
+            margin-top: 30px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #20B2AA;
+            border-radius: 5px;
+        }
+
+        .submit-btn {
+            background-color: #20B2AA;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: auto;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .submit-btn:hover {
+            background-color: #1a9090;
+        }
+
+        .status-updates {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+
+        .qa-section {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+
+        .question-card {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #20B2AA;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .teacher-response {
+            background-color: #FFB6C1;
+            color: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .file-input-container {
+            margin: 10px 0;
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px dashed #20B2AA;
+        }
+
+        .screenshot-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 10px 0;
+            border: 2px solid #20B2AA;
+            border-radius: 5px;
+            display: none;
+            object-fit: contain;
+        }
+
+        .question-image {
+            max-width: 100%;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .update-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 5px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .delete-update {
+            background-color: #FFB6C1;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            margin-left: auto;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .support-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="support-container">
+        <h1>Photoshop Support Channel</h1>
+
+        <div class="contact-form">
+            <h2>Ask Your Question</h2>
+            <input type="text" id="student-name" placeholder="Your Name">
+            <input type="text" id="tool-name" placeholder="Which Photoshop tool/feature?">
+            <textarea id="issue-description" placeholder="Describe your issue here..." rows="5"></textarea>
+            <div class="file-input-container">
+                <label for="screenshot">Add Screenshot:</label>
+                <input type="file" id="screenshot" accept="image/*" onchange="previewImage(event)">
+                <img id="screenshot-preview" class="screenshot-preview">
+            </div>
+            <button class="submit-btn" onclick="submitQuestion()">Submit Question</button>
+        </div>
+
+        <div class="status-updates">
+            <h2>Recent Updates</h2>
+            <div id="updates-container"></div>
+            <input type="text" id="new-update" placeholder="Add new update...">
+            <button class="submit-btn" onclick="addUpdate()">Add Update</button>
+        </div>
+
+        <div class="qa-section">
+            <h2>Questions & Answers</h2>
+            <div id="qa-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let updates = [];
+
+        function previewImage(event) {
+            const preview = document.getElementById('screenshot-preview');
+            const file = event.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitQuestion() {
+            const name = document.getElementById('student-name').value.trim();
+            const tool = document.getElementById('tool-name').value.trim();
+            const description = document.getElementById('issue-description').value.trim();
+            const screenshot = document.getElementById('screenshot-preview').src;
+
+            if (!name || !tool || !description) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const question = {
+                id: Date.now(),
+                name: name,
+                tool: tool,
+                description: description,
+                screenshot: screenshot,
+                timestamp: new Date().toLocaleString()
+            };
+
+            questions.push(question);
+            displayQuestion(question);
+            clearForm();
+        }
+
+        function displayQuestion(question) {
+            const qaContainer = document.getElementById('qa-container');
+            const questionElement = document.createElement('div');
+            questionElement.className = 'question-card';
+            
+            let screenshotHtml = question.screenshot && question.screenshot !== '' ? 
+                `<img src="${question.screenshot}" class="question-image" alt="Screenshot">` : '';
+
+            questionElement.innerHTML = `
+                <h3>${question.name}</h3>
+                <p><strong>Tool:</strong> ${question.tool}</p>
+                <p><strong>Description:</strong> ${question.description}</p>
+                ${screenshotHtml}
+                <p><small>Posted on: ${question.timestamp}</small></p>
+            `;
+
+            qaContainer.insertBefore(questionElement, qaContainer.firstChild);
+        }
+
+        function addUpdate() {
+            const updateInput = document.getElementById('new-update');
+            const updateText = updateInput.value.trim();
+            
+            if (updateText) {
+                const update = {
+                    id: Date.now(),
+                    text: updateText,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                updates.push(update);
+                displayUpdate(update);
+                updateInput.value = '';
+            }
+        }
+
+        function displayUpdate(update) {
+            const updatesContainer = document.getElementById('updates-container');
+            const updateElement = document.createElement('div');
+            updateElement.className = 'update-item';
+            updateElement.innerHTML = `
+                <span>${update.text}</span>
+                <small style="margin-left: 10px; color: #666;">${update.timestamp}</small>
+                <button class="delete-update" onclick="deleteUpdate(${update.id})">Delete</button>
+            `;
+            updatesContainer.insertBefore(updateElement, updatesContainer.firstChild);
+        }
+
+        function deleteUpdate(updateId) {
+            updates = updates.filter(update => update.id !== updateId);
+            const updateElement = document.querySelector(`[data-update-id="${updateId}"]`);
+            if (updateElement) {
+                updateElement.remove();
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('student-name').value = '';
+            document.getElementById('tool-name').value = '';
+            document.getElementById('issue-description').value = '';
+            const preview = document.getElementById('screenshot-preview');
+            preview.src = '';
+            preview.style.display = 'none';
+            document.getElementById('screenshot').value = '';
+        }
+    </script>
+</body>
+</html>
