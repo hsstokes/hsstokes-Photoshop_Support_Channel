@@ -97,28 +97,28 @@
         }
 
         .file-input-container {
-            margin: 10px 0;
-            background: #f8f8f8;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px dashed #20B2AA;
-        }
-
-        .screenshot-preview {
             max-width: 100%;
-            max-height: 300px;
-            margin: 10px 0;
-            border: 2px solid #20B2AA;
-            border-radius: 5px;
-            display: none;
-            object-fit: contain;
-        }
+    height: auto;
+    max-height: 300px; /* Limits the height of screenshots */
+    object-fit: contain;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: none; /* Hidden by default until an image is uploaded */
+}
 
-        .question-image {
-            max-width: 100%;
-            margin: 10px 0;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+.file-input-container {
+    margin: 10px 0;
+}
+
+.question-card img {
+    max-width: 100%;
+    height: auto;
+    max-height: 300px; /* Limits the height of screenshots in questions */
+    object-fit: contain;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
         }
 
         .update-item {
