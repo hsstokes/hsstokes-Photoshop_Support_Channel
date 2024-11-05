@@ -193,163 +193,174 @@
     </div>
 
     <script>
-        let questions = [];
-        let updates = [];
+        let questions = JSON.parse(localStorage.getItem('questions') || '[]');
+let updates = JSON.parse(localStorage.getItem('updates') || '[]');
 
-        function previewImage(event) {
-            const preview = document.getElementById('screenshot-preview');
-            const file = event.target.files[0];
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+// Display existing questions and updates on page load
+window.onload = function() {
+    questions.forEach(question => displayQuestion(question));
+    updates.forEach(update => displayUpdate(update));
+}
 
-        function submitQuestion() {
-            const name = document.getElementById('student-name').value.trim();
-            const tool = document.getElementById('tool-name').value.trim();
-            const description = document.getElementById('issue-description').value.trim();
-            const screenshot = document.getElementById('screenshot-preview').src;
+function previewImage(event) {
+    const preview = document.getElementById('screenshot-preview');
+    const file = event.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
 
-            if (!name || !tool || !description) {
-                alert('Please fill in all fields');
-                return;
-            }
+function submitQuestion() {
+    const name = document.getElementById('student-name').value.trim();
+    const tool = document.getElementById('tool-name').value.trim();
+    const description = document.getElementById('issue-description').value.trim();
+    const screenshot = document.getElementById('screenshot-preview').src;
 
-            const question = {
-                id: Date.now(),
-                name: name,
-                tool: tool,
-                description: description,
-                screenshot: screenshot,
-                timestamp: new Date().toLocaleString(),
-                responses: []
-            };
+    if (!name || !tool || !description) {
+        alert('Please fill in all fields');
+        return;
+    }
 
-            questions.push(question);
-            displayQuestion(question);
-            clearForm();
-        }
+    const question = {
+        id: Date.now(),
+        name: name,
+        tool: tool,
+        description: description,
+        screenshot: screenshot,
+        timestamp: new Date().toLocaleString(),
+        responses: []
+    };
 
-        function displayQuestion(question) {
-            const qaContainer = document.getElementById('qa-container');
-            const questionElement = document.createElement('div');
-            questionElement.className = 'question-card';
-            questionElement.setAttribute('data-question-id', question.id);
-            
-            let screenshotHtml = question.screenshot && question.screenshot !== '' ? 
-                `<img src="${question.screenshot}" class="question-image" style="display: block;" alt="Screenshot">` : '';
+    questions.push(question);
+    localStorage.setItem('questions', JSON.stringify(questions));
+    displayQuestion(question);
+    clearForm();
+}
 
-            let questionHtml = `
-                <h3>${question.name}</h3>
-                <p><strong>Tool:</strong> ${question.tool}</p>
-                <p><strong>Description:</strong> ${question.description}</p>
-                ${screenshotHtml}
-                <p><small>Posted on: ${question.timestamp}</small></p>
-                <div class="responses-container">
-            `;
+function displayQuestion(question) {
+    const qaContainer = document.getElementById('qa-container');
+    const questionElement = document.createElement('div');
+    questionElement.className = 'question-card';
+    questionElement.setAttribute('data-question-id', question.id);
+    
+    let screenshotHtml = question.screenshot && question.screenshot !== '' ? 
+        `<img src="${question.screenshot}" class="question-image" style="display: block;" alt="Screenshot">` : '';
 
-            if (question.responses) {
-                question.responses.forEach(response => {
-                    questionHtml += `
-                        <div class="response-text">
-                            <p>${response.text}</p>
-                            <small>Responded on: ${response.timestamp}</small>
-                        </div>
-                    `;
-                });
-            }
+    let questionHtml = `
+        <h3>${question.name}</h3>
+        <p><strong>Tool:</strong> ${question.tool}</p>
+        <p><strong>Description:</strong> ${question.description}</p>
+        ${screenshotHtml}
+        <p><small>Posted on: ${question.timestamp}</small></p>
+        <div class="responses-container">
+    `;
 
+    if (question.responses) {
+        question.responses.forEach(response => {
             questionHtml += `
-                </div>
-                <div class="response-form">
-                    <textarea class="response-textarea" placeholder="Write your response here..." rows="3"></textarea>
-                    <button class="submit-btn" onclick="submitResponse(${question.id})">Submit Response</button>
+                <div class="response-text">
+                    <p>${response.text}</p>
+                    <small>Responded on: ${response.timestamp}</small>
                 </div>
             `;
+        });
+    }
 
-            questionElement.innerHTML = questionHtml;
-            qaContainer.insertBefore(questionElement, qaContainer.firstChild);
+    questionHtml += `
+        </div>
+        <div class="response-form">
+            <textarea class="response-textarea" placeholder="Write your response here..." rows="3"></textarea>
+            <button class="submit-btn" onclick="submitResponse(${question.id})">Submit Response</button>
+        </div>
+    `;
+
+    questionElement.innerHTML = questionHtml;
+    qaContainer.insertBefore(questionElement, qaContainer.firstChild);
+}
+
+function submitResponse(questionId) {
+    const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+    const responseTextarea = questionElement.querySelector('.response-textarea');
+    const responseText = responseTextarea.value.trim();
+
+    if (responseText) {
+        const responsesContainer = questionElement.querySelector('.responses-container');
+        const responseElement = document.createElement('div');
+        responseElement.className = 'response-text';
+        responseElement.innerHTML = `
+            <p>${responseText}</p>
+            <small>Responded on: ${new Date().toLocaleString()}</small>
+        `;
+
+        responsesContainer.appendChild(responseElement);
+        responseTextarea.value = '';
+
+        const question = questions.find(q => q.id === questionId);
+        if (question) {
+            question.responses.push({
+                text: responseText,
+                timestamp: new Date().toLocaleString()
+            });
+            localStorage.setItem('questions', JSON.stringify(questions));
         }
+    }
+}
 
-        function submitResponse(questionId) {
-            const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
-            const responseTextarea = questionElement.querySelector('.response-textarea');
-            const responseText = responseTextarea.value.trim();
+function addUpdate() {
+    const updateInput = document.getElementById('new-update');
+    const updateText = updateInput.value.trim();
+    
+    if (updateText) {
+        const update = {
+            id: Date.now(),
+            text: updateText,
+            timestamp: new Date().toLocaleString()
+        };
 
-            if (responseText) {
-                const responsesContainer = questionElement.querySelector('.responses-container');
-                const responseElement = document.createElement('div');
-                responseElement.className = 'response-text';
-                responseElement.innerHTML = `
-                    <p>${responseText}</p>
-                    <small>Responded on: ${new Date().toLocaleString()}</small>
-                `;
+        updates.push(update);
+        localStorage.setItem('updates', JSON.stringify(updates));
+        displayUpdate(update);
+        updateInput.value = '';
+    }
+}
 
-                responsesContainer.appendChild(responseElement);
-                responseTextarea.value = '';
+function displayUpdate(update) {
+    const updatesContainer = document.getElementById('updates-container');
+    const updateElement = document.createElement('div');
+    updateElement.className = 'update-item';
+    updateElement.setAttribute('data-update-id', update.id);
+    updateElement.innerHTML = `
+        <span>${update.text}</span>
+        <small style="margin-left: 10px; color: #666;">${update.timestamp}</small>
+        <button class="delete-update" onclick="deleteUpdate(${update.id})">Delete</button>
+    `;
+    updatesContainer.insertBefore(updateElement, updatesContainer.firstChild);
+}
 
-                const question = questions.find(q => q.id === questionId);
-                if (question) {
-                    question.responses.push({
-                        text: responseText,
-                        timestamp: new Date().toLocaleString()
-                    });
-                }
-            }
-        }
+function deleteUpdate(updateId) {
+    updates = updates.filter(update => update.id !== updateId);
+    localStorage.setItem('updates', JSON.stringify(updates));
+    const updateElement = document.querySelector(`[data-update-id="${updateId}"]`);
+    if (updateElement) {
+        updateElement.remove();
+    }
+}
 
-        function addUpdate() {
-            const updateInput = document.getElementById('new-update');
-            const updateText = updateInput.value.trim();
-            
-            if (updateText) {
-                const update = {
-                    id: Date.now(),
-                    text: updateText,
-                    timestamp: new Date().toLocaleString()
-                };
-
-                updates.push(update);
-                displayUpdate(update);
-                updateInput.value = '';
-            }
-        }
-
-        function displayUpdate(update) {
-            const updatesContainer = document.getElementById('updates-container');
-            const updateElement = document.createElement('div');
-            updateElement.className = 'update-item';
-            updateElement.setAttribute('data-update-id', update.id);
-            updateElement.innerHTML = `
-                <span>${update.text}</span>
-                <small style="margin-left: 10px; color: #666;">${update.timestamp}</small>
-                <button class="delete-update" onclick="deleteUpdate(${update.id})">Delete</button>
-            `;
-            updatesContainer.insertBefore(updateElement, updatesContainer.firstChild);
-        }
-
-        function deleteUpdate(updateId) {
-            updates = updates.filter(update => update.id !== updateId);
-            const updateElement = document.querySelector(`[data-update-id="${updateId}"]`);
-            if (updateElement) {
-                updateElement.remove();
-            }
-        }
-
-        function clearForm() {
-            document.getElementById('student-name').value = '';
-            document.getElementById('tool-name').value = '';
-            document.getElementById('issue-description').value = '';
-            const preview = document.getElementById('screenshot-preview');
-            preview.src = '';
-            preview.style.display = 'none';
-            document.getElementById('screenshot').value = '';
+function clearForm() {
+    document.getElementById('student-name').value = '';
+    document.getElementById('tool-name').value = '';
+    document.getElementById('issue-description').value = '';
+    const preview = document.getElementById('screenshot-preview');
+    preview.src = '';
+    preview.style.display = 'none';
+    document.getElementById('screenshot').value = '';
+}
         }
     </script>
 </body>
