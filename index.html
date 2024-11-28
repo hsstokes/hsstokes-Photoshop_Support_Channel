@@ -193,13 +193,43 @@
     </div>
 
     <script>
-        let questions = JSON.parse(localStorage.getItem('questions') || '[]');
-let updates = JSON.parse(localStorage.getItem('updates') || '[]');
+  // Initialize data storage
+let questions = JSON.parse(localStorage.getItem('questions')) || [];
+let updates = JSON.parse(localStorage.getItem('updates')) || [];
 
-// Display existing questions and updates on page load
+// Load data when page loads
 window.onload = function() {
+    loadData();
+    displayAllData();
+}
+
+// Load data from localStorage
+function loadData() {
+    try {
+        questions = JSON.parse(localStorage.getItem('questions')) || [];
+        updates = JSON.parse(localStorage.getItem('updates')) || [];
+    } catch (e) {
+        console.error('Error loading data:', e);
+        questions = [];
+        updates = [];
+    }
+}
+
+// Display all existing data
+function displayAllData() {
+    const qaContainer = document.getElementById('qa-container');
+    const updatesContainer = document.getElementById('updates-container');
+    
+    // Clear existing content
+    qaContainer.innerHTML = '';
+    updatesContainer.innerHTML = '';
+    
+    // Display questions
     questions.forEach(question => displayQuestion(question));
+    
+    // Display updates
     updates.forEach(update => displayUpdate(update));
+}
 }
 
 function previewImage(event) {
